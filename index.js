@@ -7,7 +7,7 @@ const dbConfig = {
     host: "127.0.0.1",
     user: "root",
     password: "",
-    database: "database_schema"                           
+    database: "database_schema"
 };
 
 //middlewere
@@ -48,6 +48,40 @@ app.post('/generate-report', async (req, res) => {
         await connection.end();
     }
 });
+
+
+
+// Generate Report SQL Query
+app.get('/generate-report', async (req, res) => {
+    const connection = await mysql.createConnection(dbConfig);
+    try {
+        const [rows] = await connection.query(`
+
+
+        SELECT
+            u.name AS CustomerName,
+            SUM(ph.total_amount) AS TotalAmountSpent
+        FROM
+            Users u
+        JOIN
+            Purchase_History ph ON u.user_id = ph.user_id
+        GROUP BY
+            u.user_id, u.name
+        ORDER BY
+            TotalAmountSpent DESC
+        LIMIT 1;
+
+      `);
+        res.json(rows);
+    } catch (error) {
+        console.error('Error generating report:', error);
+        res.status(500).send('Error generating report.');
+    } finally {
+        await connection.end();
+    }
+});
+
+
 
 app.get('/', (req, res) => {
     res.send('mysql is running')
